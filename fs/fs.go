@@ -16,6 +16,7 @@ package fs
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mineiros-io/terramate/errors"
@@ -32,7 +33,16 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	logger.Trace().Msg("listing files")
 
-	dirEntries, err := os.ReadDir(dir)
+	f, err := os.Open(dir)
+	if err != nil {
+		return nil, errors.E(err, "opening directory %s for reading file entries", dir)
+	}
+
+	defer func() {
+		err = errors.L(err, f.Close()).AsError()
+	}()
+
+	filenames, err := f.Readdirnames(0)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate files")
 	}
@@ -41,26 +51,29 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	files := []string{}
 
-	for _, dirEntry := range dirEntries {
+	for _, filename := range filenames {
 		logger := logger.With().
-			Str("entryName", dirEntry.Name()).
+			Str("entryName", filename).
 			Logger()
 
-		if strings.HasPrefix(dirEntry.Name(), ".") {
-			logger.Trace().Msg("ignoring dotfile")
+		if strings.HasPrefix(filename, ".") || !isTerramateFile(filename) {
+			logger.Trace().Msg("ignoring file")
 			continue
 		}
 
-		if dirEntry.IsDir() {
+		abspath := filepath.Join(dir, filename)
+		st, err := os.Lstat(abspath)
+		if err != nil {
+			return nil, err
+		}
+
+		if st.IsDir() {
 			logger.Trace().Msg("ignoring dir")
 			continue
 		}
 
-		filename := dirEntry.Name()
-		if isTerramateFile(filename) {
-			logger.Trace().Msg("Found Terramate file")
-			files = append(files, filename)
-		}
+		logger.Trace().Msg("Found Terramate file")
+		files = append(files, filename)
 	}
 
 	return files, nil
