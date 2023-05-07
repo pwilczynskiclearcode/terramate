@@ -25,7 +25,7 @@ import (
 
 // ListTerramateFiles returns a list of terramate related files from the
 // directory dir.
-func ListTerramateFiles(dir string) (filenames []string, err error) {
+func ListTerramateFiles(dir string) ([]string, error) {
 	logger := log.With().
 		Str("action", "fs.listTerramateFiles()").
 		Str("dir", dir).
@@ -38,11 +38,9 @@ func ListTerramateFiles(dir string) (filenames []string, err error) {
 		return nil, errors.E(err, "opening directory %s for reading file entries", dir)
 	}
 
-	defer func() {
-		err = errors.L(err, f.Close()).AsError()
-	}()
+	defer f.Close()
 
-	filenames, err = f.Readdirnames(0)
+	filenames, err := f.Readdirnames(0)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate files")
 	}
