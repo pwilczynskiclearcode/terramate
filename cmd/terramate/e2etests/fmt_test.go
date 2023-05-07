@@ -98,8 +98,9 @@ name = "name"
 
 	t.Run("checking fails with unformatted files", func(t *testing.T) {
 		assertRunResult(t, cli.run("fmt", "--check"), runExpected{
-			Status: 1,
-			Stdout: wantedFilesStr,
+			Status:       1,
+			Stdout:       wantedFilesStr,
+			SortedStdout: true,
 		})
 		assertWantedFilesContents(t, unformattedHCL)
 	})
@@ -108,7 +109,8 @@ name = "name"
 		subdir := filepath.Join(s.RootDir(), "another-stacks")
 		cli := newCLI(t, subdir)
 		assertRunResult(t, cli.run("fmt", "--check"), runExpected{
-			Status: 1,
+			Status:       1,
+			SortedStdout: true,
 			Stdout: filesListOutput([]string{
 				"globals.tm.hcl",
 				"stack-1/globals.tm.hcl",
@@ -120,7 +122,8 @@ name = "name"
 
 	t.Run("update unformatted files in place", func(t *testing.T) {
 		assertRunResult(t, cli.run("fmt"), runExpected{
-			Stdout: wantedFilesStr,
+			Stdout:       wantedFilesStr,
+			SortedStdout: true,
 		})
 		assertWantedFilesContents(t, formattedHCL)
 	})
@@ -141,6 +144,7 @@ name = "name"
 		anotherStacks := filepath.Join(s.RootDir(), "another-stacks")
 		cli := newCLI(t, anotherStacks)
 		assertRunResult(t, cli.run("fmt"), runExpected{
+			SortedStdout: true,
 			Stdout: filesListOutput([]string{
 				"globals.tm.hcl",
 				"stack-1/globals.tm.hcl",
@@ -160,6 +164,7 @@ name = "name"
 		stacks := filepath.Join(s.RootDir(), "stacks")
 		cli = newCLI(t, stacks)
 		assertRunResult(t, cli.run("fmt"), runExpected{
+			SortedStdout: true,
 			Stdout: filesListOutput([]string{
 				"globals.tm",
 				"stack-1/globals.tm",
@@ -178,7 +183,8 @@ name = "name"
 
 		cli = newCLI(t, s.RootDir())
 		assertRunResult(t, cli.run("fmt"), runExpected{
-			Stdout: filesListOutput([]string{"globals.tm"}),
+			SortedStdout: true,
+			Stdout:       filesListOutput([]string{"globals.tm"}),
 		})
 
 		assertWantedFilesContents(t, formattedHCL)

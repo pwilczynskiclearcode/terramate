@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -51,6 +52,7 @@ type runExpected struct {
 
 	IgnoreStdout bool
 	IgnoreStderr bool
+	SortedStdout bool
 
 	FlattenStdout bool
 	Status        int
@@ -222,8 +224,24 @@ func assertRunResult(t *testing.T, got runResult, want runExpected) {
 	// in more detail why it has failed.
 
 	if !want.IgnoreStdout {
-		stdout := got.Stdout
-		wantStdout := want.Stdout
+		var (
+			stdout     string
+			wantStdout string
+		)
+
+		if want.SortedStdout {
+			lines := strings.Split(got.Stdout, "\n")
+			sort.Strings(lines)
+			stdout = strings.Join(lines, "\n")
+
+			lines = strings.Split(want.Stdout, "\n")
+			sort.Strings(lines)
+			wantStdout = strings.Join(lines, "\n")
+		} else {
+			stdout = got.Stdout
+			wantStdout = want.Stdout
+		}
+
 		if want.FlattenStdout {
 			stdout = flatten(stdout)
 			wantStdout = flatten(wantStdout)
