@@ -33,14 +33,7 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	logger.Trace().Msg("listing files")
 
-	f, err := os.Open(dir)
-	if err != nil {
-		return nil, errors.E(err, "opening directory %s for reading file entries", dir)
-	}
-
-	defer f.Close()
-
-	filenames, err := f.Readdirnames(-1)
+	filenames, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate files")
 	}
@@ -51,15 +44,15 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	for _, filename := range filenames {
 		logger := logger.With().
-			Str("entryName", filename).
+			Str("entryName", filename.Name()).
 			Logger()
 
-		if !isTerramateFile(filename) {
+		if !isTerramateFile(filename.Name()) {
 			logger.Trace().Msg("ignoring file")
 			continue
 		}
 
-		abspath := filepath.Join(dir, filename)
+		abspath := filepath.Join(dir, filename.Name())
 		st, err := os.Lstat(abspath)
 		if err != nil {
 			return nil, err
@@ -71,7 +64,7 @@ func ListTerramateFiles(dir string) ([]string, error) {
 		}
 
 		logger.Trace().Msg("Found Terramate file")
-		files = append(files, filename)
+		files = append(files, filename.Name())
 	}
 
 	return files, nil
