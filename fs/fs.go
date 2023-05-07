@@ -120,15 +120,15 @@ func ListTerramateDirs(dir string) ([]string, error) {
 }
 
 func isTerramateFile(filename string) bool {
-	if filename[0] == '.' || len(filename) <= 3 {
+	if len(filename) <= 3 || filename[0] == '.' {
 		return false
 	}
 	switch filename[len(filename)-1] {
+	default:
+		return false
 	case 'l':
 		return strings.HasSuffix(filename, ".tm.hcl")
 	case 'm':
 		return strings.HasSuffix(filename, ".tm")
-	default:
-		return false
 	}
 }
