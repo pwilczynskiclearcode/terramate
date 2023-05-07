@@ -56,7 +56,7 @@ func ListTerramateFiles(dir string) ([]string, error) {
 			Str("entryName", filename).
 			Logger()
 
-		if strings.HasPrefix(filename, ".") || !isTerramateFile(filename) {
+		if !isTerramateFile(filename) {
 			logger.Trace().Msg("ignoring file")
 			continue
 		}
@@ -120,5 +120,15 @@ func ListTerramateDirs(dir string) ([]string, error) {
 }
 
 func isTerramateFile(filename string) bool {
-	return strings.HasSuffix(filename, ".tm") || strings.HasSuffix(filename, ".tm.hcl")
+	if filename[0] == '.' || len(filename) <= 3 {
+		return false
+	}
+	switch filename[len(filename)-1] {
+	case 'l':
+		return strings.HasSuffix(filename, ".tm.hcl")
+	case 'm':
+		return strings.HasSuffix(filename, ".tm")
+	default:
+		return false
+	}
 }
