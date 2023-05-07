@@ -81,7 +81,7 @@ bench/all:
 bench/check: allocdelta="+20%"
 bench/check: timedelta="+20%"
 bench/check: name=github.com/mineiros-io/terramate
-bench/check: pkg=./...
+bench/check: pkg?=./...
 bench/check: old=i4k-benchmark-readdir
 bench/check: new?=$(shell git rev-parse HEAD)
 bench/check:
