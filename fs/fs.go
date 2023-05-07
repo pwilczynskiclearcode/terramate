@@ -16,7 +16,6 @@ package fs
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mineiros-io/terramate/errors"
@@ -47,19 +46,8 @@ func ListTerramateFiles(dir string) ([]string, error) {
 			Str("entryName", filename.Name()).
 			Logger()
 
-		if !isTerramateFile(filename.Name()) {
+		if filename.IsDir() || !isTerramateFile(filename.Name()) {
 			logger.Trace().Msg("ignoring file")
-			continue
-		}
-
-		abspath := filepath.Join(dir, filename.Name())
-		st, err := os.Lstat(abspath)
-		if err != nil {
-			return nil, err
-		}
-
-		if st.IsDir() {
-			logger.Trace().Msg("ignoring dir")
 			continue
 		}
 
