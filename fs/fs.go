@@ -40,7 +40,7 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	defer f.Close()
 
-	filenames, err := f.Readdirnames(0)
+	filenames, err := f.Readdirnames(-1)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate files")
 	}
