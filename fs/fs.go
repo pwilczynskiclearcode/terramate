@@ -79,7 +79,16 @@ func ListTerramateDirs(dir string) ([]string, error) {
 
 	logger.Trace().Msg("listing dirs")
 
-	dirEntries, err := os.ReadDir(dir)
+	f, err := os.Open(dir)
+	if err != nil {
+		return nil, errors.E(err, "opening directory %s for reading file entries", dir)
+	}
+
+	defer func() {
+		err = errors.L(err, f.Close()).AsError()
+	}()
+
+	dirEntries, err := f.ReadDir(-1)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate dirs")
 	}
@@ -89,21 +98,18 @@ func ListTerramateDirs(dir string) ([]string, error) {
 	dirs := []string{}
 
 	for _, dirEntry := range dirEntries {
+		fname := dirEntry.Name()
+
 		logger := logger.With().
-			Str("entryName", dirEntry.Name()).
+			Str("entryName", fname).
 			Logger()
 
-		if !dirEntry.IsDir() {
-			logger.Trace().Msg("ignoring non-dir")
+		if fname[0] == '.' || !dirEntry.IsDir() {
+			logger.Trace().Msg("ignoring file")
 			continue
 		}
 
-		if strings.HasPrefix(dirEntry.Name(), ".") {
-			logger.Trace().Msg("ignoring dotdir")
-			continue
-		}
-
-		dirs = append(dirs, dirEntry.Name())
+		dirs = append(dirs, fname)
 	}
 
 	return dirs, nil
