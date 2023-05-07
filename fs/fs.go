@@ -24,7 +24,7 @@ import (
 
 // ListTerramateFiles returns a list of terramate related files from the
 // directory dir.
-func ListTerramateFiles(dir string) ([]string, error) {
+func ListTerramateFiles(dir string) (filenames []string, err error) {
 	logger := log.With().
 		Str("action", "fs.listTerramateFiles()").
 		Str("dir", dir).
@@ -32,7 +32,16 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	logger.Trace().Msg("listing files")
 
-	filenames, err := os.ReadDir(dir)
+	f, err := os.Open(dir)
+	if err != nil {
+		return nil, errors.E(err, "opening directory %s for reading file entries", dir)
+	}
+
+	defer func() {
+		err = errors.L(err, f.Close()).AsError()
+	}()
+
+	dirEntries, err := f.ReadDir(-1)
 	if err != nil {
 		return nil, errors.E(err, "reading dir to list Terramate files")
 	}
@@ -41,18 +50,20 @@ func ListTerramateFiles(dir string) ([]string, error) {
 
 	files := []string{}
 
-	for _, filename := range filenames {
+	for _, entry := range dirEntries {
+		fname := entry.Name()
+
 		logger := logger.With().
-			Str("entryName", filename.Name()).
+			Str("entryName", fname).
 			Logger()
 
-		if filename.IsDir() || !isTerramateFile(filename.Name()) {
+		if entry.IsDir() || !isTerramateFile(fname) {
 			logger.Trace().Msg("ignoring file")
 			continue
 		}
 
 		logger.Trace().Msg("Found Terramate file")
-		files = append(files, filename.Name())
+		files = append(files, fname)
 	}
 
 	return files, nil
