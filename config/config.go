@@ -391,13 +391,14 @@ func loadTree(rootdir string, cfgdir string, rootcfg *hcl.Config) (*Tree, error)
 
 	logger.Trace().Msg("reading directory file names")
 
-	names, err := f.Readdirnames(0)
+	dirEntries, err := f.ReadDir(-1)
 	if err != nil {
 		return nil, errors.E(err, "failed to read files in %s", cfgdir)
 	}
 
-	for _, name := range names {
-		if name == SkipFilename {
+	for _, dirEntry := range dirEntries {
+		fname := dirEntry.Name()
+		if fname == SkipFilename {
 			logger.Debug().Msg("skip file found: skipping whole subtree")
 			return NewTree(cfgdir), nil
 		}
@@ -413,35 +414,31 @@ func loadTree(rootdir string, cfgdir string, rootcfg *hcl.Config) (*Tree, error)
 		}
 		tree.Node = cfg
 	}
-
-	for _, name := range names {
+	for _, dirEntry := range dirEntries {
+		fname := dirEntry.Name()
 		logger = logger.With().
-			Str("filename", name).
+			Str("filename", fname).
 			Logger()
 
-		if Skip(name) {
+		if Skip(fname) {
 			logger.Trace().Msg("skipping file")
 			continue
 		}
-		dir := filepath.Join(cfgdir, name)
-		st, err := os.Lstat(dir)
-		if err != nil {
-			return nil, errors.E(err, "failed to stat %s", dir)
-		}
-		if !st.IsDir() {
+		if !dirEntry.IsDir() {
 			logger.Trace().Msg("ignoring non-directory file")
 			continue
 		}
 
 		logger.Trace().Msg("loading children tree")
 
+		dir := filepath.Join(cfgdir, fname)
 		node, err := LoadTree(rootdir, dir)
 		if err != nil {
 			return nil, errors.E(err, "loading from %s", dir)
 		}
 
 		node.Parent = tree
-		tree.Children[name] = node
+		tree.Children[fname] = node
 	}
 	return tree, nil
 }
