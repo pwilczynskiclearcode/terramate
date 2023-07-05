@@ -267,6 +267,9 @@ func assertRunResult(t *testing.T, got runResult, want runExpected) {
 				)
 			}
 		} else {
+			t.Logf("want: %s", wantStdout)
+			t.Logf("stdout: %s", stdout)
+
 			if diff := cmp.Diff(wantStdout, stdout); diff != "" {
 				t.Errorf("stdout mismatch: %s", diff)
 			}

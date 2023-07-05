@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/terramate-io/terramate/config"
 	"github.com/terramate-io/terramate/errors"
+	"github.com/terramate-io/terramate/project"
 	"github.com/terramate-io/terramate/run/dag"
 )
 
@@ -30,21 +31,30 @@ func Sort(root *config.Root, stacks config.List[*config.SortableStack]) (config.
 
 	logger.Trace().Msg("Computes implicit hierarchical order.")
 
-	isParentStack := func(s1, s2 *config.Stack) bool {
-		return s1.Dir.HasPrefix(s2.Dir.String() + "/")
+	// returns true if s1 is a direct child of s2
+	isChildStackOf := func(s1, s2 *config.Stack) bool {
+		isDescendent := s1.Dir.HasPrefix(s2.Dir.String() + "/")
+		if !isDescendent {
+			return false
+		}
+		rest := strings.TrimPrefix(s1.Dir.String(), s2.Dir.String()+"/")
+		return !strings.Contains(rest, "/")
 	}
 
 	sort.Sort(stacks)
-	for _, stackElem := range stacks {
-		for _, otherElem := range stacks {
-			if stackElem.Dir() == otherElem.Dir() {
+	stacksMap := map[project.Path]*config.SortableStack{}
+	for _, s1 := range stacks {
+		stacksMap[s1.Dir()] = s1
+
+		for _, s2 := range stacks {
+			if s1.Dir() == s2.Dir() {
 				continue
 			}
 
-			if isParentStack(stackElem.Stack, otherElem.Stack) {
-				logger.Debug().Msgf("stack %q runs before %q since it is its parent", otherElem, stackElem)
+			if isChildStackOf(s1.Stack, s2.Stack) {
+				logger.Debug().Msgf("stack %q runs before %q since it is its parent", s2, s1)
 
-				otherElem.AppendBefore(stackElem.Dir().String())
+				s2.AppendBefore(s1.Dir().String())
 			}
 		}
 	}
