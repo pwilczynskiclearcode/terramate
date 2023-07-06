@@ -536,7 +536,7 @@ func TestCLIRunOrder(t *testing.T) {
 			},
 		},
 		{
-			name: "implicit order with tags",
+			name: "implicit order with tags - Zied case",
 			layout: []string{
 				`s:project:tags=["project"];before=["tag:identity"]`,
 				`s:iac/cloud-storage/bucket:tags=["bucket"];after=["tag:project", "tag:service-account"]`,
@@ -553,7 +553,7 @@ func TestCLIRunOrder(t *testing.T) {
 			},
 		},
 		{
-			name: "filesystem implicit order",
+			name: "before clause pulling a branch of fs ordered stacks",
 			layout: []string{
 				`s:project:tags=["project"];before=["tag:parent"]`,
 				`s:dir/parent:tags=["parent"]`,
@@ -566,6 +566,23 @@ func TestCLIRunOrder(t *testing.T) {
 					`/dir/parent`,
 					`/dir/parent/child`,
 					`/dir/other`,
+				),
+			},
+		},
+		{
+			name: "stack pulled to the middle of fs ordering chain",
+			layout: []string{
+				`s:parent`,
+				`s:parent/child:before=["tag:other"]`,
+				`s:parent/child/grand-child`,
+				`s:other:tags=["other"]`,
+			},
+			want: runExpected{
+				Stdout: listStacks(
+					`/parent`,
+					`/parent/child`,
+					`/other`,
+					`/parent/child/grand-child`,
 				),
 			},
 		},
