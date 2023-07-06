@@ -536,6 +536,23 @@ func TestCLIRunOrder(t *testing.T) {
 			},
 		},
 		{
+			name: "implicit order with tags",
+			layout: []string{
+				`s:project:tags=["project"];before=["tag:identity"]`,
+				`s:iac/cloud-storage/bucket:tags=["bucket"];after=["tag:project", "tag:service-account"]`,
+				`s:iac/service-accounts:tags=["identity"];before=["/iac/service-accounts/sa-name"]`,
+				`s:iac/service-accounts/sa-name:tags=["service-account"]`,
+			},
+			want: runExpected{
+				Stdout: listStacks(
+					"/project",
+					"/iac/service-accounts",
+					"/iac/service-accounts/sa-name",
+					"/iac/cloud-storage/bucket",
+				),
+			},
+		},
+		{
 			name: "filesystem implicit order",
 			layout: []string{
 				`s:project:tags=["project"];before=["tag:parent"]`,
@@ -549,23 +566,6 @@ func TestCLIRunOrder(t *testing.T) {
 					`/dir/parent`,
 					`/dir/parent/child`,
 					`/dir/other`,
-				),
-			},
-		},
-		{
-			name: "implicit order check",
-			layout: []string{
-				`s:project:tags=["project"];before=["tag:identity"]`,
-				`s:iac/cloud-storage/bucket:tags=["bucket"];after=["tag:project", "tag:service-account"]`,
-				`s:iac/service-accounts:tags=["identity"];before=["/iac/service-accounts/sa-name"]`,
-				`s:iac/service-accounts/sa-name:tags=["service-account"]`,
-			},
-			want: runExpected{
-				Stdout: listStacks(
-					"/project",
-					"/iac/service-accounts",
-					"/iac/service-accounts/sa-name",
-					"/iac/cloud-storage/bucket",
 				),
 			},
 		},
