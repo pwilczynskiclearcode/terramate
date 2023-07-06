@@ -289,7 +289,7 @@ func validateWatchPaths(rootdir string, stackpath string, paths []string) (proje
 }
 
 // StacksFromTrees converts a List[*Tree] into a List[*Stack].
-func StacksFromTrees(root string, trees List[*Tree]) (List[*SortableStack], error) {
+func StacksFromTrees(trees List[*Tree]) (List[*SortableStack], error) {
 	var stacks List[*SortableStack]
 	for _, tree := range trees {
 		s, err := tree.Stack()
