@@ -22,6 +22,10 @@ Given a version number `MAJOR.MINOR.PATCH`, we increment the:
 
 ## Unreleased
 
+## Fixed
+
+- Removed non-supported functions (`tm_sensitive` and `tm_nonsensitive`)
+
 ## 0.4.1
 
 ### Added
